@@ -1,0 +1,3 @@
+ALTER TABLE 
+    posts
+DROP CONSTRAINTfk_user;
