@@ -26,6 +26,7 @@ type dbConfig struct {
 type config struct {
 	addr string
 	db   dbConfig
+	env  string
 }
 
 func (app *application) mount() *chi.Mux {
@@ -38,7 +39,30 @@ func (app *application) mount() *chi.Mux {
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Get("/v1/health", app.healthCheckHandler)
+	r.Route("/v1", func(r chi.Router) {
+
+		// /v1/health
+		r.Get("/health", app.healthCheckHandler)
+
+		// /v1/posts/
+		r.Route("/posts", func(r chi.Router) {
+			r.Post("/", app.createPostHandler)
+
+			r.Route("/{postID}", func(r chi.Router) {
+
+				r.Use(app.postsContextMiddleware)
+
+				r.Get("/", app.getPostHandler)
+
+				r.Delete("/", app.deletePostHandler)
+
+				// 更新属性，put设置实体
+				r.Patch("/", app.updatePostHandler)
+			})
+
+		})
+
+	})
 
 	return r
 }
