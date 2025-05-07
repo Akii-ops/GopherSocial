@@ -41,14 +41,14 @@ func (app *application) unauthorizedErrorResponse(w http.ResponseWriter, r *http
 }
 
 // not used
-func (app *application) unauthorizedBasicErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+// func (app *application) unauthorizedBasicErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 
-	app.logger.Warnf("unauthorized basci error", "method", r.Method, "paht", r.URL.Path, "error", err.Error())
+// 	app.logger.Warnf("unauthorized basci error", "method", r.Method, "paht", r.URL.Path, "error", err.Error())
 
-	w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
-	w.WriteHeader(http.StatusUnauthorized)
-	wrtieJSONError(w, http.StatusConflict, "unauthorized")
-}
+// 	w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+// 	w.WriteHeader(http.StatusUnauthorized)
+// 	wrtieJSONError(w, http.StatusConflict, "unauthorized")
+// }
 
 func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request, retryafter string) error {
 	app.logger.Warnf("rate limit exceeded", "method", r.Method, "path", r.URL.Path)
