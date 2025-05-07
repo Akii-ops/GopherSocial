@@ -2,7 +2,6 @@ package main
 
 import (
 	"backend/internal/store"
-	"context"
 	"net/http"
 	"strconv"
 
