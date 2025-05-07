@@ -1,0 +1,20 @@
+{{define "subject"}}Finish Registration with GopherSocial{{end}}
+
+{{define "body"}}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm Your GopherSocial Account</title>
+</head>
+<body>
+    <h1>Hi {{.Username}}, Welcome to GopherSocial!</h1>
+    <p>Thanks for registering! Please confirm your email address to activate your account.</p>
+    <p><a href="{{.ActivationURL}}">Confirm Email Address</a></p>
+    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+    <p><a href="{{.ActivationURL}}">{{.ActivationURL}}</a></p>
+    <p>This link will expire in 24 hours.</p>
+    <p>Need help? Contact <a href="mailto:support@gophersocial.com">support@gophersocial.com</a></p>
+</body>
+</html>
+{{end}}

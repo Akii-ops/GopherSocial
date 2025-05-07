@@ -1,0 +1,542 @@
+basePath: /v1
+definitions:
+  main.CreatePostPayload:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 100
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  main.CreateTokenPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 72
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  main.EnvelopeErr:
+    properties:
+      error:
+        type: string
+    type: object
+  main.RegisterUserPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 72
+        minLength: 3
+        type: string
+      username:
+        maxLength: 100
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  main.UpdatePostPayload:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+      title:
+        maxLength: 100
+        type: string
+    type: object
+  main.UserWithToken:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/store.User'
+    type: object
+  store.Comment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      user:
+        $ref: '#/definitions/store.User'
+      user_id:
+        type: integer
+    type: object
+  store.Post:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/store.Comment'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/store.User'
+      user_id:
+        type: integer
+      version:
+        type: integer
+    type: object
+  store.PostWithMetadata:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/store.Comment'
+        type: array
+      comments_count:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/store.User'
+      user_id:
+        type: integer
+      version:
+        type: integer
+    type: object
+  store.Role:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      level:
+        type: integer
+      name:
+        type: string
+    type: object
+  store.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      role:
+        $ref: '#/definitions/store.Role'
+      role_id:
+        type: integer
+      username:
+        type: string
+    type: object
+host: localhost:9999
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API for  API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: GGM API
+  version: 0.0.2
+paths:
+  /authentication/token:
+    post:
+      consumes:
+      - application/json
+      description: token
+      parameters:
+      - description: User credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateTokenPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: token
+      tags:
+      - token
+  /authentication/user:
+    post:
+      parameters:
+      - description: User credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.RegisterUserPayload'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.UserWithToken'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+  /health:
+    get:
+      description: 返回json，描述环境信息和版本
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.EnvelopeErr'
+      summary: 测试 应用程序 API 可行
+      tags:
+      - health
+  /posts/:
+    post:
+      consumes:
+      - application/json
+      description: createPost
+      parameters:
+      - description: CreatePostPayload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/store.Post'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: createPost
+      tags:
+      - createPost
+  /posts/{postID}:
+    delete:
+      consumes:
+      - application/json
+      description: deletePost
+      parameters:
+      - description: 'deletePost '
+        in: path
+        name: postID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: deletePost
+      tags:
+      - deletePost
+    get:
+      consumes:
+      - application/json
+      description: getPost
+      parameters:
+      - description: 'getPost '
+        in: path
+        name: postID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.Post'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: getPost
+      tags:
+      - getPost
+    patch:
+      consumes:
+      - application/json
+      description: updatePost
+      parameters:
+      - description: 'updatePost '
+        in: path
+        name: postID
+        required: true
+        type: integer
+      - description: UpdatePostPayload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: updatePost
+      tags:
+      - updatePost
+  /users/{userID}:
+    get:
+      consumes:
+      - application/json
+      description: 根据用户ID返回用户详情
+      parameters:
+      - description: user ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户信息
+          schema:
+            $ref: '#/definitions/store.User'
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户信息
+      tags:
+      - users
+  /users/{userID}/follow:
+    put:
+      consumes:
+      - application/json
+      description: 关注用户，路径参数为被关注用户，
+      parameters:
+      - description: the ID of user to be followed
+        in: path
+        name: userID
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "409":
+          description: Conflict
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 关注用户
+      tags:
+      - users follow
+  /users/{userID}/unfollow:
+    put:
+      consumes:
+      - application/json
+      description: 取消关注用户，路径参数为被取关用户，
+      parameters:
+      - description: the ID of user to be unfollowed
+        in: path
+        name: userID
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 取关用户
+      tags:
+      - users unfollow
+  /users/activate/{token}:
+    put:
+      consumes:
+      - application/json
+      description: 激活关注用户
+      parameters:
+      - description: ' '
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User activated
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: 激活用户
+      tags:
+      - users activate
+  /users/feed:
+    get:
+      consumes:
+      - application/json
+      description: token
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        required: true
+        type: string
+      - description: limit
+        in: query
+        name: offset
+        required: true
+        type: string
+      - description: limit
+        in: query
+        name: sort
+        required: true
+        type: string
+      - description: limit
+        in: query
+        name: tags
+        required: true
+        type: string
+      - description: limit
+        in: query
+        name: search
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.PostWithMetadata'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: feed
+      tags:
+      - feed
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

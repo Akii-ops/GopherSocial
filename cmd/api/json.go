@@ -15,9 +15,15 @@ func init() {
 }
 
 func wrtieJSON(w http.ResponseWriter, status int, data any) error {
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	return json.NewEncoder(w).Encode(data)
+}
+
+func NoContentResponse(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusNoContent)
+	return nil
 }
 
 func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
@@ -33,20 +39,21 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	return decoder.Decode(data)
 }
 
-func wrtieJSONError(w http.ResponseWriter, status int, message string) error {
-	type envolope struct {
-		Error string `json:"error"`
-	}
+type EnvelopeData struct {
+	Data any `json:"data"`
+}
 
-	return wrtieJSON(w, status, &envolope{message})
+type EnvelopeErr struct {
+	Error string `json:"error"`
+}
+
+func wrtieJSONError(w http.ResponseWriter, status int, message string) error {
+
+	return wrtieJSON(w, status, &EnvelopeErr{message})
 
 }
 
 func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
 
-	type envelope struct {
-		Data any `json:"data"`
-	}
-
-	return wrtieJSON(w, status, &envelope{Data: data})
+	return wrtieJSON(w, status, &EnvelopeData{Data: data})
 }

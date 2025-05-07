@@ -3,6 +3,7 @@ package db
 import (
 	"backend/internal/store"
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -19,114 +20,217 @@ var blogUsernames = []string{
 	"Nora", "Matthew", "Hazel", "Samuel", "Ellie",
 	"David", "Violet", "Joseph", "Luna", "Carter",
 	"Stella", "Owen", "Lucy", "Wyatt", "Claire",
+	"Gabriel", "Scarlett", "Christopher", "Hannah",
+	"Anthony", "Zoe", "Dylan", "Elizabeth", "Isaac",
+	"Addison", "Ryan", "Grace", "Nathan", "Layla",
+	"Isaiah", "Natalie", "Adam", "Savannah", "Caleb",
+	"Victoria", "Thomas", "Aurora", "Eli", "Bella",
+	"Levi", "Nevaeh", "Aaron", "Stella", "Hunter",
 }
 
 var blogTitles = []string{
-	"AI绘画革命:Midjourney实战指南",
-	"从零搭建React18性能优化体系",
-	"元宇宙社交:Horizon Worlds初体验",
-	"深度解读《三体》中的Dark Forest理论",
-	"Go语言并发编程:Channel高级技巧",
-	"Vintage风格装修:老宅Loft改造实录",
-	"Web3.0入门:ENS域名投资指南",
-	"咖啡地图:手冲咖啡的变量控制Variables",
-	"Flutter跨平台开发:iOS/Android实战",
-	"碳中和时代:ESG投资逻辑解析",
-	"暗黑系摄影:Low-key Lighting布光教学",
-	"智能家居:HomeKit自动化场景设计",
-	"剧本杀创作:Plot Twist设计方法论",
-	"植物养护指南:多肉Succulent度夏技巧",
-	"古典乐赏析:贝多芬Moonlight Sonata",
-	"极简主义:Capsule Wardrobe构建法则",
-	"深度学习实战:PyTorch模型优化技巧",
-	"城市探索:Abandoned Factory摄影纪实",
-	"健康管理:Biohacking基础实践",
-	"独立开发:从MVP到Product Hunt发布",
+	// Original 20
+	"AI Art Revolution: MidJourney Masterclass",
+	"Building React 18 Performance Optimization Systems",
+	"Metaverse Social: First Impressions of Horizon Worlds",
+	"Decoding the Dark Forest Theory in 'The Three-Body Problem'",
+	"Go Concurrency: Advanced Channel Patterns",
+	"Vintage Loft Makeover: Industrial Chic Transformation",
+	"Web3 Fundamentals: ENS Domain Investment Guide",
+	"Coffee Science: Mastering Pour-Over Variables",
+	"Flutter Cross-Platform: iOS/Android Production Patterns",
+	"Carbon Neutral Era: ESG Investment Strategies",
+	"Low-Key Photography: Dramatic Lighting Techniques",
+	"Smart Home Automation: Advanced HomeKit Scenes",
+	"Murder Mystery Design: Plot Twist Architecture",
+	"Succulent Care Guide: Summer Survival Tactics",
+	"Classical Deep Dive: Beethoven's Moonlight Sonata",
+	"Capsule Wardrobe: Minimalist Fashion System",
+	"Deep Learning Optimization: PyTorch Pro Tips",
+	"Urban Exploration: Abandoned Factory Photography",
+	"Biohacking 101: Quantified Self Experiments",
+	"Indie Dev Journey: From MVP to Product Hunt",
+
+	// New additions
+	"Rust Memory Safety: Ownership Patterns Explained",
+	"Kubernetes Cost Optimization: Cluster Autoscaling Deep Dive",
+	"AR Development: RealityKit Spatial Anchors Implementation",
+	"Quantum Computing Basics: Qubit Entanglement Demystified",
+	"Serverless Security: AWS Lambda IAM Best Practices",
+	"Digital Twin Architecture: IoT Sensor Fusion Techniques",
+	"Ethical Hacking: SSRF Vulnerability Exploitation & Prevention",
+	"FinTech Architecture: Payment Gateway Resilience Design",
+	"3D Printing: Voronoi Structure Optimization for Lightweighting",
+	"Climate Tech: Carbon Credit Verification Blockchain Solutions",
+	"GameFi Economics: Play-to-Earn Tokenomics Analysis",
+	"Cybersecurity: Zero Trust Network Access Implementation",
+	"Biotech: CRISPR Gene Editing Workflow Automation",
+	"Robotics: ROS2 Navigation Stack Customization",
+	"DevOps: GitOps Pipeline Security Hardening",
+	"Data Engineering: Delta Lake Schema Evolution Strategies",
+	"UI/UX: Dark Mode Accessibility Considerations",
+	"Space Tech: CubeSat Communication Protocols",
+	"Edge Computing: WASM MicroRuntime Deployment",
+	"Voice Tech: Alexa Skill Multi-Language Localization",
 }
 
 var blogContents = []string{
-	"详解MidJourney基础命令与常用参数组合，通过prompt工程实现特定艺术风格输出", // 对应AI绘画标题
-	"通过代码分割/懒加载优化首屏性能，分析React18并发渲染的核心机制",
-	"对比Horizon Worlds与VRChat的社交体系差异，实测虚拟身份创建流程",
-	"解读黑暗森林法则的博弈论基础，推演费米悖论的可能解决方案",
-	"深入讲解select语句与context包在goroutine生命周期管理中的实践",
-	"记录老厂房改造中如何保留工业元素，平衡现代极简设计语言",
-	"解析ENS域名估值模型，演示在OpenSea平台进行域名交易的完整流程",
-	"量化研磨度/水温/注水速度对风味的影响，建立可复用的冲煮参数矩阵",
-	"实现跨平台状态共享方案，解决iOS/Android系统特性差异导致的UI适配问题",
-	"拆解环境社会治理指标，分析新能源产业在ESG评级中的权重变化",
-	"演示单灯布光技巧，利用伦勃朗光塑造戏剧化的人物肖像效果",
-	"构建基于地理围栏的自动化场景，实现离家自动关断高耗能设备",
-	"设计多线叙事结构，通过红鲱鱼技巧制造推理反转效果",
-	"针对不同品种制定配土方案，建立夏季控水与通风的标准化流程",
-	"解析第三乐章的情感表达，比较不同钢琴家演奏的速度处理差异",
-	"建立33件基础单品数据库，制定季节性胶囊衣橱的搭配算法",
-	"应用混合精度训练与知识蒸馏技术，提升模型推理效率30%以上",
-	"记录工业遗址摄影中的构图思维，危险环境拍摄的安全防护要点",
-	"实践冷暴露与间歇性断食方案，量化监测心率变异性改善幅度",
-	"制定产品上线Checklist，涵盖ASO优化与媒体包准备的完整流程",
+	// Original 20
+	"Master MidJourney commands and parameters for precise artistic style generation through prompt engineering",
+	"Optimize initial load performance with code splitting and lazy loading in React's concurrent rendering architecture",
+	"Comparing social dynamics between Horizon Worlds and VRChat, with avatar creation walkthrough",
+	"Analyzing game theory foundations of Dark Forest theory and potential Fermi paradox solutions",
+	"Practical patterns for goroutine lifecycle management using select statements and context cancellation",
+	"Documenting industrial element preservation in loft conversions with modern minimalist design principles",
+	"Evaluating ENS valuation models and step-by-step domain trading on OpenSea",
+	"Quantifying grind size/water temperature effects and building reproducible brew parameter matrices",
+	"Implementing cross-platform state management solutions for platform-specific UI challenges",
+	"Breaking down ESG metrics and analyzing renewable energy's evolving role in corporate ratings",
+	"Single-light setup demonstrations using Rembrandt lighting for portrait drama",
+	"Geofence-based automation configurations for energy-efficient smart home ecosystems",
+	"Multi-threaded narrative structures using red herrings for mystery storytelling",
+	"Species-specific soil mixtures and standardized summer watering/ventilation protocols",
+	"Comparative analysis of tempo interpretations by renowned pianists in 3rd movement",
+	"33-item core wardrobe system with seasonal combination algorithms",
+	"30%+ inference speed gains through mixed precision training and knowledge distillation",
+	"Industrial composition techniques and safety protocols for hazardous location shoots",
+	"Cold exposure/IF protocols with HRV tracking for biohacking beginners",
+	"Launch checklist covering ASO optimization and press kit preparation workflows",
+
+	// New additions
+	"Implementing Rust's borrow checker patterns for safe concurrent memory access in high-performance systems",
+	"Cluster capacity planning using vertical pod autoscaling and spot instance integration strategies",
+	"Implementing persistent AR experiences with plane detection and scene understanding in RealityKit",
+	"Quantum circuit simulations demonstrating superdense coding and quantum teleportation protocols",
+	"Least privilege principle implementation using service-linked roles and permission boundaries",
+	"Time-series sensor data synchronization using Kalman filters for digital twin accuracy",
+	"Burp Suite exploitation lab demonstrating SSRF chaining to cloud metadata endpoints",
+	"Circuit breaker implementation for payment processing with automated failover testing",
+	"Topology optimization algorithms for strength-to-weight ratio maximization in Fusion 360",
+	"ERC-1155 smart contract development for transparent carbon offset tracking on Ethereum",
+	"Analyzing Axie Infinity's dual-token model and sustainability challenges in P2E ecosystems",
+	"ZTNA implementation guide using Cloudflare Access and mutual TLS authentication",
+	"Automated guide RNA design pipelines using Benchling API and CRISPR library management",
+	"Customizing ROS2 Nav2 stack for omnidirectional mobile robots in warehouse environments",
+	"Supply chain security implementation with signed commits and binary authorization in Argo CD",
+	"Schema migration patterns using Delta Lake time travel and merge operations",
+	"Contrast ratio optimization and color perception testing for dark theme implementations",
+	"LoRaWAN protocol implementation for ground station communication in CubeSat deployments",
+	"WebAssembly System Interface (WASI) integration for edge computing function portability",
+	"Language model switching techniques using Alexa Conversations multilingual skill toolkit",
 }
 
 var blogTags = [][]string{
-	{"AI绘画", "数字艺术", "工具教程", "AIGC"},
-	{"前端开发", "React", "性能优化", "Web应用"},
-	{"元宇宙", "虚拟现实", "社交网络", "科技趋势"},
-	{"科幻文学", "博弈论", "物理学", "书评"},
-	{"Go语言", "并发编程", "系统设计", "后端开发"},
-	{"室内设计", "旧房改造", "工业风", "生活美学"},
-	{"区块链", "Web3.0", "数字资产", "投资指南"},
-	{"咖啡文化", "手冲技巧", "精品咖啡", "生活仪式感"},
-	{"移动开发", "跨平台", "Flutter", "UI适配"},
-	{"可持续发展", "ESG投资", "碳中和", "商业分析"},
-	{"摄影艺术", "人像摄影", "布光技巧", "暗黑系"},
-	{"智能家居", "HomeKit", "物联网", "自动化"},
-	{"剧本创作", "推理游戏", "叙事设计", "社交娱乐"},
-	{"园艺养护", "多肉植物", "度夏技巧", "绿植"},
-	{"古典音乐", "钢琴曲", "音乐赏析", "贝多芬"},
-	{"极简主义", "胶囊衣橱", "生活方式", "断舍离"},
-	{"深度学习", "PyTorch", "模型优化", "AI工程"},
-	{"城市探索", "废墟摄影", "工业遗产", "纪实"},
-	{"健康科技", "生物黑客", "自我量化", "健康管理"},
-	{"独立开发", "产品设计", "创业", "MVP"},
+	// Original 20
+	{"AI Art", "Digital Art", "Tutorial", "AIGC"},
+	{"Frontend", "React", "Optimization", "Web Dev"},
+	{"Metaverse", "VR", "Social Media", "Tech Trends"},
+	{"Sci-Fi", "Game Theory", "Physics", "Book Analysis"},
+	{"Go", "Concurrency", "Systems Design", "Backend"},
+	{"Interior Design", "Renovation", "Industrial", "Lifestyle"},
+	{"Blockchain", "Web3", "NFTs", "Investing"},
+	{"Coffee", "Brewing", "Specialty", "Lifestyle"},
+	{"Mobile", "Cross-Platform", "Flutter", "UI/UX"},
+	{"Sustainability", "ESG", "Carbon Neutral", "Finance"},
+	{"Photography", "Portraits", "Lighting", "Low-Key"},
+	{"Smart Home", "HomeKit", "IoT", "Automation"},
+	{"Game Design", "Storytelling", "Social Games", "Entertainment"},
+	{"Gardening", "Succulents", "Plant Care", "Botany"},
+	{"Classical", "Piano", "Music Theory", "Beethoven"},
+	{"Minimalism", "Fashion", "Lifestyle", "Organization"},
+	{"Deep Learning", "PyTorch", "MLOps", "AI"},
+	{"Urban", "Photography", "Industrial", "Documentary"},
+	{"Health", "Biohacking", "Quantified Self", "Wellness"},
+	{"Startups", "Product Design", "Entrepreneurship", "MVP"},
+
+	// New additions
+	{"Rust", "Memory Safety", "Systems Programming", "Concurrency"},
+	{"Kubernetes", "Cloud", "Cost Optimization", "DevOps"},
+	{"AR", "RealityKit", "Spatial Computing", "iOS Dev"},
+	{"Quantum", "Physics", "Qubits", "Algorithms"},
+	{"AWS", "Serverless", "Security", "IAM"},
+	{"IoT", "Digital Twin", "Sensor Fusion", "Industry 4.0"},
+	{"Cybersecurity", "Ethical Hacking", "Web Security", "SSRF"},
+	{"FinTech", "Microservices", "Resilience", "Payments"},
+	{"3D Printing", "Topology Optimization", "CAD", "Engineering"},
+	{"Blockchain", "Climate Tech", "Carbon Credits", "Sustainability"},
+	{"GameFi", "NFTs", "Tokenomics", "Web3"},
+	{"Zero Trust", "Network Security", "ZTNA", "Cloudflare"},
+	{"Biotech", "CRISPR", "Automation", "Bioinformatics"},
+	{"Robotics", "ROS2", "Navigation", "Warehouse Tech"},
+	{"GitOps", "CI/CD", "Security", "Supply Chain"},
+	{"Data Engineering", "Delta Lake", "Spark", "Big Data"},
+	{"Accessibility", "UI Design", "Dark Mode", "Color Theory"},
+	{"Space Tech", "CubeSat", "LoRaWAN", "Aerospace"},
+	{"WASM", "Edge Computing", "Containers", "Microservices"},
+	{"Voice Tech", "Alexa", "NLP", "Localization"},
 }
 
 var blogComments = []string{
-	"Prompt工程部分讲得太到位了！终于搞明白seed参数怎么用了",
-	"React并发模式的实际性能提升有测试数据支持吗？",
-	"虚拟社交的身份切换功能如果能支持跨平台就好了",
-	"黑暗森林理论与囚徒困境的结合角度很新颖！",
-	"Go的context超时控制在实际微服务中确实关键",
-	"工业风吊顶的管线处理方案可以再详细些吗？",
-	"ENS域名投资的风险评估部分建议补充案例",
-	"手冲变量矩阵图太实用了，已打印贴在咖啡台！",
-	"跨平台状态管理方案能否用于电商类APP？",
-	"ESG指标在传统制造业的应用有参考资料推荐吗？",
-	"伦勃朗光教学视频的机位角度能展示下吗？",
-	"地理围栏触发条件在多层公寓的精度如何？",
-	"红鲱鱼技巧在剧本杀中的占比多少比较合适？",
-	"配土方案能具体到颗粒土品牌吗？",
-	"不同演奏版本的频谱分析图很有说服力！",
-	"胶囊衣橱的算法逻辑是否有开源项目参考？",
-	"知识蒸馏的教师模型选择有什么讲究？",
-	"工业遗址拍摄的安全装备清单很专业！",
-	"心率变异性检测用什么设备比较准？",
-	"Product Hunt上线前的邮件预热模板能分享吗？",
+	// Original 20
+	"The prompt engineering section is spot-on! Finally understand how to use the seed parameter properly.",
+	"Are there real-world benchmarks for React 18's concurrent features?",
+	"Cross-platform avatar compatibility would be a game-changer!",
+	"Brilliant connection between Dark Forest and prisoner's dilemma!",
+	"Context timeout handling is crucial for microservice resilience.",
+	"Can we get more details on exposed ductwork finishing techniques?",
+	"Would love to see more case studies on ENS investment risks.",
+	"Brew variable matrix now permanently taped to my coffee station!",
+	"Could this state management approach work for e-commerce apps?",
+	"Any recommended ESG implementation guides for manufacturing?",
+	"Need camera angle diagrams for the Rembrandt lighting demo!",
+	"How precise is geofencing in high-rise apartment buildings?",
+	"What's the ideal percentage of red herrings in mystery plots?",
+	"Specific brand recommendations for inorganic soil components?",
+	"Spectrogram comparisons add scientific rigor to music analysis!",
+	"Is there open-source code for the wardrobe algorithm?",
+	"How to choose teacher models for distillation effectively?",
+	"Essential safety gear list saved me multiple times!",
+	"What's the most accurate HRV monitoring device?",
+	"Would you share your Product Hunt email outreach template?",
+
+	// New additions
+	"Lifetime annotations in Rust could use more practical examples",
+	"Cluster autoscaler configuration thresholds need deeper explanation",
+	"ARKit vs RealityKit performance comparison would be valuable",
+	"Quantum circuit visualization tools recommendation needed",
+	"Lambda cold start mitigation techniques missing in IAM context",
+	"Digital twin accuracy metrics framework request",
+	"SSRF prevention in serverless architectures needs expansion",
+	"Payment gateway circuit breaker pattern implementation details?",
+	"Voroni structure FEA simulation parameters unclear",
+	"Carbon credit verification oracle design challenges?",
+	"GameFi token inflation control mechanisms analysis?",
+	"ZTNA vs VPN performance overhead comparison data?",
+	"CRISPR library scale management best practices?",
+	"ROS2 navigation stack customization tutorials?",
+	"GitOps pipeline CVE scanning implementation guide?",
+	"Delta Lake schema evolution conflict resolution strategies?",
+	"Dark mode contrast verification tools recommendation?",
+	"CubeSat deployment frequency coordination challenges?",
+	"WASI filesystem access security implications?",
+	"Alexa Conversations dialog management complexity analysis?",
 }
 
-func Seed(store store.Storage) {
+func Seed(store store.Storage, db *sql.DB) {
 	ctx := context.Background()
 
-	users := generateUsers(100)
+	users := generateUsers(1000)
+	tx, _ := db.BeginTx(ctx, nil)
 
 	for _, user := range users {
-		if err := store.Users.Create(ctx, user); err != nil {
+
+		if err := store.Users.Create(ctx, tx, user); err != nil {
+			_ = tx.Rollback()
 			log.Println("Error creating user:", err)
 			return
 		}
 
 	}
 
-	posts := generatePosts(200, users)
+	tx.Commit()
+
+	posts := generatePosts(2000, users)
 
 	for _, post := range posts {
 		if err := store.Posts.Create(ctx, post); err != nil {
@@ -135,7 +239,7 @@ func Seed(store store.Storage) {
 		}
 	}
 
-	comments := generateComments(500, users, posts)
+	comments := generateComments(10000, users, posts)
 
 	for _, comment := range comments {
 		if err := store.Comments.Create(ctx, comment); err != nil {
@@ -146,20 +250,23 @@ func Seed(store store.Storage) {
 
 	log.Println("seeding complete")
 
-	return
-
 }
 
 func generateUsers(num int) []*store.User {
 
 	users := make([]*store.User, num)
-
+	pwd := &store.Password{}
+	pwd.Set("123123")
 	for i := 0; i < num; i++ {
 
 		users[i] = &store.User{
 			Username: blogUsernames[i%len(blogUsernames)] + fmt.Sprintf("%d", i),
-			Email:    blogUsernames[i%len(blogUsernames)] + fmt.Sprintf("%d", i) + "@example.com",
-			Password: "123123",
+			Email:    blogUsernames[i%len(blogUsernames)] + fmt.Sprintf("%d", i) + "@example2.com",
+			Role: store.Role{
+				Name: "user",
+			},
+
+			Password: *pwd,
 		}
 
 	}
